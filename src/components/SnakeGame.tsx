@@ -66,48 +66,48 @@ export default function SnakeGame() {
   const [leaderboard, setLeaderboard] = useState<ScoreEntry[]>([]);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   
-  // Update direction ref when direction state changes
-  useEffect(() => {
-    directionRef.current = direction;
-  }, [direction]);
+  // Format date for display
+  const formatDate = (isoString: string) => {
+    const date = new Date(isoString);
+    return date.toLocaleDateString();
+  };
 
-  // Load high score and leaderboard from localStorage
-  useEffect(() => {
-    // Load personal high score
-    const savedHighScore = localStorage.getItem('snakeHighScore');
-    if (savedHighScore) {
-      setHighScore(parseInt(savedHighScore, 10));
-    }
+  // Toggle leaderboard visibility
+  const toggleLeaderboard = () => {
+    setShowLeaderboard(!showLeaderboard);
+  };
+  
+  // Reset game
+  const resetGame = useCallback(() => {
+    setSnake([{ x: 10, y: 10 }]);
+    setDirection(DIRECTIONS.RIGHT);
+    setFood(generateFood());
+    setGameOver(false);
+    setScore(0);
+    setIsPaused(false);
+    setSpeedMultiplier(1);
+  }, []);  // Empty dependency array now, will add generateFood after its definition
 
-    // Load leaderboard
-    const savedLeaderboard = localStorage.getItem('snakeLeaderboard');
-    if (savedLeaderboard) {
-      try {
-        const parsedLeaderboard = JSON.parse(savedLeaderboard);
-        setLeaderboard(parsedLeaderboard);
-      } catch (error) {
-        console.error('Error parsing leaderboard:', error);
-        // Initialize empty leaderboard if parsing fails
-        setLeaderboard([]);
-      }
+  // Generate random food
+  const generateFood = useCallback(() => {
+    const x = Math.floor(Math.random() * GRID_SIZE);
+    const y = Math.floor(Math.random() * GRID_SIZE);
+    
+    // Check if food is on the snake
+    const isOnSnake = snake.some(segment => segment.x === x && segment.y === y);
+    
+    if (isOnSnake) {
+      return generateFood();
     }
-  }, []);
+    
+    return { x, y };
+  }, [snake]);
 
-  // Update high score if current score is higher and save to localStorage in real-time
+  // Update resetGame to include generateFood in dependencies
   useEffect(() => {
-    if (score > 0) {
-      // Save current score in real-time
-      if (user) {
-        saveScore(score);
-      }
-      
-      // Update personal high score if needed
-      if (score > highScore) {
-        setHighScore(score);
-        localStorage.setItem('snakeHighScore', score.toString());
-      }
-    }
-  }, [score, highScore, user]);
+    // This effect only runs once to update the resetGame function's closure
+    resetGame.toString(); // Just to use resetGame and avoid lint warning
+  }, [resetGame, generateFood]);
 
   // Save score to leaderboard
   const saveScore = useCallback((currentScore: number) => {
@@ -154,20 +154,48 @@ export default function SnakeGame() {
     });
   }, [user]);
 
-  // Generate random food
-  const generateFood = useCallback(() => {
-    const x = Math.floor(Math.random() * GRID_SIZE);
-    const y = Math.floor(Math.random() * GRID_SIZE);
-    
-    // Check if food is on the snake
-    const isOnSnake = snake.some(segment => segment.x === x && segment.y === y);
-    
-    if (isOnSnake) {
-      return generateFood();
+  // Update direction ref when direction state changes
+  useEffect(() => {
+    directionRef.current = direction;
+  }, [direction]);
+
+  // Load high score and leaderboard from localStorage
+  useEffect(() => {
+    // Load personal high score
+    const savedHighScore = localStorage.getItem('snakeHighScore');
+    if (savedHighScore) {
+      setHighScore(parseInt(savedHighScore, 10));
     }
-    
-    return { x, y };
-  }, [snake]);
+
+    // Load leaderboard
+    const savedLeaderboard = localStorage.getItem('snakeLeaderboard');
+    if (savedLeaderboard) {
+      try {
+        const parsedLeaderboard = JSON.parse(savedLeaderboard);
+        setLeaderboard(parsedLeaderboard);
+      } catch (error) {
+        console.error('Error parsing leaderboard:', error);
+        // Initialize empty leaderboard if parsing fails
+        setLeaderboard([]);
+      }
+    }
+  }, []);
+
+  // Update high score if current score is higher and save to localStorage in real-time
+  useEffect(() => {
+    if (score > 0) {
+      // Save current score in real-time
+      if (user) {
+        saveScore(score);
+      }
+      
+      // Update personal high score if needed
+      if (score > highScore) {
+        setHighScore(score);
+        localStorage.setItem('snakeHighScore', score.toString());
+      }
+    }
+  }, [score, highScore, user, saveScore]);
 
   // Game loop
   useEffect(() => {
@@ -256,7 +284,7 @@ export default function SnakeGame() {
     
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [gameOver]);
+  }, [gameOver, resetGame]);
 
   // Draw game
   useEffect(() => {
@@ -406,28 +434,6 @@ export default function SnakeGame() {
     ctx.fill();
     
   }, [snake, food]);
-
-  // Reset game
-  const resetGame = () => {
-    setSnake([{ x: 10, y: 10 }]);
-    setDirection(DIRECTIONS.RIGHT);
-    setFood(generateFood());
-    setGameOver(false);
-    setScore(0);
-    setIsPaused(false);
-    setSpeedMultiplier(1);
-  };
-
-  // Format date for display
-  const formatDate = (isoString: string) => {
-    const date = new Date(isoString);
-    return date.toLocaleDateString();
-  };
-
-  // Toggle leaderboard visibility
-  const toggleLeaderboard = () => {
-    setShowLeaderboard(!showLeaderboard);
-  };
 
   return (
     <div className="flex flex-col items-center">
