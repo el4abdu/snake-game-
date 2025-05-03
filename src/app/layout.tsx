@@ -9,6 +9,7 @@ import {
 } from '@clerk/nextjs';
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { clerkKeys } from './api/clerk-keys';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,13 +26,18 @@ export const metadata: Metadata = {
   description: "A modern Snake game with user authentication. Sign in to play and track your high scores!",
 };
 
+// Make the clerk keys available as process.env values
+if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = clerkKeys.publishableKey;
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider publishableKey={clerkKeys.publishableKey}>
       <html lang="en">
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
