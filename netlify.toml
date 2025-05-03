@@ -1,5 +1,5 @@
 [build]
-  command = "npm install --force && node build-script.js && npm run build"
+  command = "npm install --force && npm install tailwindcss@latest postcss@latest autoprefixer@latest --save-dev && node build-script.js && npm run build"
   publish = ".next"
 
 [build.environment]
