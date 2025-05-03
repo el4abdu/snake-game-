@@ -1,5 +1,5 @@
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
-import GameWrapper from "../../components/GameWrapper";
+import GameWrapper from "@/components/GameWrapper";
 
 export default function Home() {
   return (
